@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<!-- Load d3.js-->
+<script src="https://d3js.org/d3.v6.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+
+<head>
+    <meta charset="utf-8">
+    <title>Module 2 Assignment</title>
+    <link href="https://fonts.googleapis.com/css?family=JetBrains+Mono" rel="stylesheet">
+    <style>
+        /* Add your CSS styles here */
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            text-align: center; /* Center text in the body */
+        }
+
+        header, section {
+            margin: 0 auto; /* Center header and sections horizontally */
+            max-width: 800px; /* Limit maximum width to 800px or adjust as needed */
+            text-align: left; /* Reset text alignment for header and sections */
+        }
+
+        img {
+            display: block; /* Make the image a block-level element */
+            margin: 0 auto; /* Center the image horizontally */
+        }
+
+        .vertical-list {
+            list-style-type: none; /* Remove the default list bullet/number */
+            padding: 0; /* Remove default padding */
+            margin: 0; /* Remove default margin */
+          }
+          
+          .vertical-list li {
+            margin-bottom: 5px; /* Adjust the margin to control vertical space between items */
+          }
+          
+          .gray-text {
+            color: grey; /* Use "gray" or any shade of grey you prefer */
+          }
+          
+        
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1 style="text-align: center;">Banana Quality</h1>
+        <h1>🍌🍌🍌🍌🍌🍌🍌🍌🍌🍌🍌🍌🍌🍌🍌🍌🍌🍌🍌🍌🍌🍌🍌🍌</h1>
+        <h3 style="text-align: center;" class="gray-text">Data Visualizations by Mikaela Sherry</h3>
+        <p>Bananas come in all different shapes and sizes, and some bananas are good while others are not so good. Through these visualizations I want to explore <i>“how do different metrics of a banana affect whether it is considered good quality or bad quality?”</i> There were many different metrics to examine in the dataset that I used, but I chose to specifically look at “Harvest Time”, “Ripeness”, “Sweetness”, and “Size”. Something to note about the dataset being used is that values do not have any units, and rather represent the deviation from what is considered an “average banana” with the value 0 representing the average.</p>
+    </header>
+
+    <section>
+        <h2>Visualization 1: Scatter Plot</h2>
+        <div id="chart1"></div>
+        <p>The first visualization was constructed using d3 and explores the relationship between ripeness and harvest time and their affect on the quality of a banana. Through the use of a scatterplot you can see that harvest time does not necessarily have an impact on a banana’s ripeness, however, the resulting ripeness and harvest time do have an effect on the quality together. When a banana has a below average ripeness, it is typically considered bad quality. Also, there is a higher frequency of good quality bananas in the later harvest time. this shows that in the upper lefthand quadrant, where harvest time and ripeness are the highest, the frequency of good quality bananas is higher.</p>
+
+        <!-- Create a div to hold graph visualization -->
+        <h3>Ripeness vs. Harvest Time and the Affect on Quality</h3>
+        <div id="chart"></div>
+
+        <script>
+
+            const margin = {top: 50, right: 50, bottom: 50, left: 60},
+                    width = 800 - margin.left - margin.left,
+                    height = 600 - margin.top - margin.bottom;
+        
+            // append svg to body
+            const svg = d3.select("#chart")
+                            .append("svg")
+                            .attr("width", width + margin.left + margin.right)
+                            .attr("height", height + margin.top + margin.bottom)
+                            .append("g")
+                            .attr("transform", `translate(${margin.left}, ${margin.top})`)
+            
+            d3.csv("banana_quality.csv", function (d){
+                return {
+                    size: +d['Size'],
+                    weight: +d['Weight'],
+                    sweetness: +d['Sweetness'],
+                    softness: +d['Softness'],
+                    harvestTime: +d['HarvestTime'],
+                    ripeness: +d['Ripeness'],
+                    acidity: +d['Acidity'],
+                    quality: d['Quality']
+                }        
+            }).then(function(data) {
+                console.log
+        
+                const x = d3.scaleLinear()
+                                .domain([d3.min(data, d=> d.harvestTime), d3.max(data, d=> d.harvestTime)])
+                                .range([0, width])
+                svg.append("text")
+                    .attr("class", "x label")
+                    .attr("text-anchor", "middle")
+                    .attr("x", width / 2) 
+                    .attr("y", height + 48)
+                    .style("font-size", "20px")
+                    .text("Harvest Time")
+                            
+                const y = d3.scaleLinear()
+                                .domain([d3.min(data, d=> d.ripeness), d3.max(data, d=> d.ripeness)])
+                                .range([height, 0])
+                svg.append("text")
+                                .attr("class", "y-label")
+                                .attr("text-anchor", "middle")
+                                .attr("x", -height / 2)
+                                .attr("y", -margin.left + 25) // Adjust the Y position as needed
+                                .attr("transform", "rotate(-90)")
+                                .style("font-size", "20px")
+                                .text("Ripeness")
+                            
+                //const color = d3.scaleOrdinal()
+                //                .domain(data.map(d=>d.region))
+                //                .range(d3.schemeSet3)
+        
+                
+                        
+                        
+                svg.append("g").call(d3.axisLeft(y))
+        
+                 // add in our marks
+                svg.append("g")
+                .selectAll("dot")
+                .data(data)
+                .join("circle")
+                    .attr("cx", function(d){
+                        return x(d.harvestTime)
+                    })
+                    .attr("cy", function(d) {
+                        return y(d.ripeness)
+                    })
+                    .attr("r", 1.5)
+                    .style("opacity", 1.5)
+                    .style("fill", function(d) {
+                        if(d.quality == "Good") {
+                            return "green";
+                        }
+                        if(d.quality == "Bad") {
+                            return "red";
+                        } else {
+                            return "gray"
+                        }
+                    })
+                    
+                svg.append("g")
+                    .attr("transform", `translate(0, ${y(0)})`)
+                    .call(d3.axisBottom(x))
+                    
+        
+            })
+        
+        </script>
+
+
+    </section>
+
+    <section>
+        <h2>Visualization 2: Bar Chart</h2>
+        <div id="chart2"></div>
+        <p>The second visualization was constructed using Altair and explores the relationship between sweetness and harvest time and their affect on the quality of a banana. Immediately when looking that this visualization you can see that harvest time has no effect on the sweetness of the banana - no matter when you harvest it, it does not impact a bananas sweetness according to the chart. However, we can really see how sweetness affects the quality of a banana. In almost all cases, bananas that have above average sweetness are considered good quality, while bananas with below average sweetness are considered bad quality.</p>
+
+        <img src="sweetness.png" style="width: 70%; height: auto;"">
+
+    </section>
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    
+    
+
+    <section>
+        <h2>Visualization 3: Bubble Chart</h2>
+
+        <p>The final visualization was constructed in Tableau and explores how a bananas deviation from average size impacts the quality of a banana. For this visualization, each bubble’s physical size represents the absolute value of the datapoint, so the larger the bubble, the more it deviates from the average size. For the most part, you can see that size does not really impact the quality of a banana as there is a large array of good quality bananas and bad quality bananas in every size.</p>
+        <img src="banana_size.png" style="width: 70%; height: auto;"">
+
+    </section>
+
+    <section>
+        <h2>Conclusion</h2>
+        <p>Using these visualizations we can begin to investigate how different aspects of a banana affect its overall quality. Metrics such as sweetness and ripeness have a very evident affect on the quality of the banana, whereas things like size seem to have less of an effect on the quality. This data is important and has many possible use cases, for example it could be used to train an AI to properly classify the quality of bananas based of its different aspects.</p>
+    </section>
+
+    <hr>
+
+    <section>
+        <h3>References</h3>
+
+        <ul class="vertical-list">
+            <li>Dataset</li>
+                <ul class="gray-text">https://www.kaggle.com/datasets/l3llff/banana/data</ul>
+            <li>Visualization Inspiration</li>
+                <ul class="gray-text">https://observablehq.com/@d3/gallery</ul>
+            <li>Font</li>
+                <ul class="gray-text">JetBrains Mono</ul>
+            <br>
+        </ul>
+          
+          
+
+    </section>
+    
+</body>
